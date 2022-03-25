@@ -22,7 +22,7 @@ int get_degree(polynomial_t* polynomial) {
 	return polynomial->degree;
 }
 
-double get_coefficient_at(polynomial_t* polynomial, unsigned position) {
+double get_coefficient_at(polynomial_t* polynomial, int position) {
 	if (position > polynomial->degree) {
 		errno = -4;
 		return 0.0;
@@ -70,9 +70,38 @@ complex_polynomial_t* init_complex_polynomial(int degree, complex_p* coefficient
 
 	p->coefficients = (complex_p*)malloc((p->degree + 1) * sizeof(complex_p));
 	for (int i = 0; i <= p->degree; ++i) {
-		p->coefficients[i] = coefficients[i];
+		p->coefficients[i] = copy_complex(coefficients[i]);
 	}
 	return p;
+}
+
+complex_polynomial_p init_default_complex_polynomial(int degree){
+    complex_p* coefficients = (complex_p*) malloc(sizeof(complex_p) * (degree + 1));
+    complex_p zero = init_complex(0, 0);
+    for(int i = 0; i <= degree; ++i){
+        coefficients[i] = zero;
+    }
+
+    complex_polynomial_p result = init_complex_polynomial(degree, coefficients);
+    destroy_complex(zero);
+    free(coefficients);
+    return result;
+}
+
+complex_polynomial_p copy_complex_polynomial(complex_polynomial_p original){
+    return init_complex_polynomial(original->degree, original->coefficients);
+}
+
+bool equal_complex_polynomial(complex_polynomial_p l, complex_polynomial_p r){
+   if(l->degree == r->degree){
+       for(int i = 0; i < l->degree; ++i){
+           if(!equal_complex(l->coefficients[i], r->coefficients[i])){
+               return false;
+           }
+       }
+       return true;
+   }
+   return false;
 }
 
 int get_complex_degree(complex_polynomial_t* p)
@@ -95,15 +124,22 @@ complex_p calculate_complex_polynomial_value_at(complex_polynomial_t* p, complex
 	// c0*t^0 + c1*t^1 +...
 	complex_p result = init_complex(0, 0);
 	complex_p var = init_complex(1, 0); // t^i
+    complex_p tmp;
 	for (int i = 0; i <= get_complex_degree(p); i++)
 	{
 		complex_p coef = get_complex_coefficient_at(p, i);
 		complex_p prod = complex_mul(coef, var);
-		result = complex_add(result, prod);
-		var = complex_mul(var, t);
-		
+	    tmp = complex_add(result, prod);
+        destroy_complex(result);
+        result = tmp;
+
+		tmp = complex_mul(var, t);
+        destroy_complex(var);
+        var = tmp;
+
 		destroy_complex(prod);
 	}
+    free(var);
 	return result;
 }
 

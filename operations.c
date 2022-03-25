@@ -1,4 +1,5 @@
 #include "operations.h"
+#include "trigonometry.h"
 
 #include <math.h>
 
@@ -241,3 +242,65 @@ complex_polynomial_p bezier_curve(vector_p x, vector_p y)
     return p;
 }
 
+complex_p complex_unit_root(int n, int j){
+    double theta = 2 * M_PI * j / n;
+    double real = cosinus(theta, DEFAULT_EPSILON);
+    double imag = sinus(theta, DEFAULT_EPSILON);
+    return init_complex(real, imag);
+}
+
+complex_polynomial_p fast_fourier_transform(complex_polynomial_p p){
+    int n = p->degree + 1;
+    if(n == 1){
+       return copy_complex_polynomial(p);
+    }
+
+    complex_p* coeffs_even = malloc(n/2 * sizeof(complex_p));
+    complex_p* coeffs_odd = malloc(n/2 * sizeof(complex_p));
+
+    int poz_even = 0, poz_odd = 0;
+    for(int i = 0; i < n; ++i){
+        if(i % 2 == 0){
+            coeffs_even[poz_even++] = get_complex_coefficient_at(p, i);
+        } else {
+            coeffs_odd[poz_odd++] = get_complex_coefficient_at(p, i);
+        }
+    }
+
+    complex_polynomial_p p_even = init_complex_polynomial(n/2 - 1, coeffs_even);
+    complex_polynomial_p p_odd = init_complex_polynomial(n/2 - 1, coeffs_odd);
+
+    complex_polynomial_p y_even = fast_fourier_transform(p_even);
+    complex_polynomial_p y_odd = fast_fourier_transform(p_odd);
+
+    complex_p* coeffs = (complex_p*) malloc(n * sizeof(complex_p));
+
+    for(int j = 0; j < n/2; ++j){
+        complex_p even_coeff = get_complex_coefficient_at(y_even, j);
+        complex_p odd_coeff = get_complex_coefficient_at(y_odd, j);
+        complex_p omega = complex_unit_root(n, j);
+        complex_p product = complex_mul(omega, odd_coeff);
+        complex_p sum = complex_add(even_coeff, product);
+        complex_p diff = complex_sub(even_coeff, product);
+        coeffs[j] = sum;
+        coeffs[j + n/2] = diff;
+
+        destroy_complex(omega);
+        destroy_complex(product);
+    }
+
+
+    complex_polynomial_p result = init_complex_polynomial(n-1, coeffs);
+    for(int i = 0; i < n; ++i){
+        destroy_complex(coeffs[i]);
+    }
+    destroy_complex_polynomial(y_odd);
+    destroy_complex_polynomial(y_even);
+    destroy_complex_polynomial(p_even);
+    destroy_complex_polynomial(p_odd);
+    free(coeffs);
+    free(coeffs_odd);
+    free(coeffs_even);
+
+    return result;
+}

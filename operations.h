@@ -21,3 +21,7 @@ polynomial_p lagrange_interpolation(vector_p, vector_p);
 
 matrix_p bezier_matrix(int);
 complex_polynomial_p bezier_curve(vector_p, vector_p);
+
+complex_polynomial_p fast_fourier_transform(complex_polynomial_p);
+
+complex_p complex_unit_root(int, int);

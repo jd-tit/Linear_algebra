@@ -8,7 +8,7 @@
 #include "trigonometry.h"
 #include "complex.h"
 
-#define number_of_tests 7
+#define number_of_tests 9
 
 void run_scalar_tests();
 void run_vector_tests();
@@ -18,6 +18,7 @@ void run_polynomial_tests();
 void run_trigonometry_tests();
 void run_complex_tests(); 
 void run_complex_polynomial_tests();
+void run_fast_fourier_transform_tests();
 
 
 void run_all_tests() {
@@ -49,13 +50,17 @@ void run_all_tests() {
 
     printf("|  Running 'complex tests'. Result: ");
     run_complex_tests();
-    printf("???\n");
+    printf(" [%d%c]\n", (int)(7.0 * 100 / number_of_tests), '%');
 
     printf("|  Running 'complex polynomial tests'. Result: ");
     run_complex_polynomial_tests();
-    printf("???\n");
+    printf(" [%d%c]\n", (int)(8.0 * 100 / number_of_tests), '%');
 
-    printf("| All tests runned succesfully!\n");
+    printf("|  Running 'FFT tests'. Result: ");
+    run_fast_fourier_transform_tests();
+    printf(" [%d%c]\n", (int)(9.0 * 100 / number_of_tests), '%');
+
+    printf("| All tests ran successfully!\n");
 }
 
 void run_scalar_tests() {
@@ -362,7 +367,6 @@ void run_polynomial_tests() {
     coefficients[0] = 1; coefficients[1] = 2; coefficients[2] = 3;
     coefficients[3] = 4; coefficients[4] = 5;
     polynomial_p polynomial = init_polynomial(4, coefficients);
-    free(coefficients);
 
     assert(get_degree(polynomial) == 4);
     assert(eq_double(get_coefficient_at(polynomial, 0), 1));
@@ -444,7 +448,7 @@ void run_polynomial_tests() {
     assert(eq_double(get_matrix_value_at(mat, 3, 3), 1));
 
     destroy_matrix(mat);
-
+    free(coefficients);
     printf("PASSED");
 }
 
@@ -454,28 +458,57 @@ void run_complex_tests()
     assert(eq_double(get_complex_re(z), 4));
     assert(eq_double(get_complex_im(z), 5));
 
+    complex_p zz = copy_complex(z);
+    assert(equal_complex(z, zz));
+    destroy_complex(zz);
+
     complex_p z1, z2, r;
     z1 = init_complex(10, 5);
     z2 = init_complex(4, 2);
-    
+
     r = complex_add(z1, z2);
     assert(eq_double(get_complex_re(r), 14));
     assert(eq_double(get_complex_im(r), 7));
 
+    free(r);
     r = complex_sub(z1, z2);
     assert(eq_double(get_complex_re(r), 6));
     assert(eq_double(get_complex_im(r), 3));
 
+    free(r);
     r = complex_mul(z1, z2);
     assert(eq_double(get_complex_re(r), 30));
     assert(eq_double(get_complex_im(r), 40));
+
+    int n = 8, j = 4;
+    complex_p root =  complex_unit_root(n, j);
+    complex_p result = init_complex(-1, 0);
+    assert(equal_complex(root, result));
+    destroy_complex(root);
+    destroy_complex(result);
+
    
     destroy_complex(z);
+    destroy_complex(z1);
+    destroy_complex(z2);
+    destroy_complex(r);
+
+    printf("PASSED");
 }
 
 void run_complex_polynomial_tests()
 {
     int n = 3;
+
+    complex_polynomial_p cpy = init_default_complex_polynomial(n);
+    assert(get_complex_degree(cpy) == n);
+    complex_p zero = init_complex(0, 0);
+    for(int i = 0; i <= n; ++i){
+        assert(equal_complex(get_complex_coefficient_at(cpy, i), zero));
+    }
+    destroy_complex(zero);
+    destroy_complex_polynomial(cpy);
+
     complex_p* coeffs = (complex_p*)malloc(n * sizeof(complex_p));
     if (coeffs)
     {
@@ -484,6 +517,10 @@ void run_complex_polynomial_tests()
         coeffs[2] = init_complex(1, 0);
 
         complex_polynomial_p p = init_complex_polynomial(2, coeffs);
+        complex_polynomial_p cpy = copy_complex_polynomial(p);
+
+        assert(equal_complex_polynomial(p, cpy));
+        destroy_complex_polynomial(cpy);
 
         assert(get_complex_degree(p) == 2);
 
@@ -503,12 +540,57 @@ void run_complex_polynomial_tests()
 
 
         destroy_complex_polynomial(p);
+        destroy_complex(z);
+        destroy_complex(result);
+        destroy_complex(coeffs[0]);
+        destroy_complex(coeffs[1]);
+        destroy_complex(coeffs[2]);
     }
+    free(coeffs);
+
+    printf("PASSED");
 }
 
 void run_trigonometry_tests() {
     assert(eq_double(sinus(M_PI_2, 10e-7), 1));
     assert(eq_double(cosinus(0, 0.001), 1));
+
+    printf("PASSED");
+}
+
+void run_fast_fourier_transform_tests(){
+    int degree = 3;
+    complex_p* coeffs = malloc((degree + 1) * sizeof(complex_p));
+    coeffs[0] = init_complex(5, 0);
+    coeffs[1] = init_complex(3, 0);
+    coeffs[2] = init_complex(2, 0);
+    coeffs[3] = init_complex(1, 0);
+    complex_polynomial_p p = init_complex_polynomial(degree, coeffs);
+
+    destroy_complex(coeffs[0]);
+    destroy_complex(coeffs[1]);
+    destroy_complex(coeffs[2]);
+    destroy_complex(coeffs[3]);
+
+    coeffs[0] = init_complex(11, 0);
+    coeffs[1] = init_complex(3, 2);
+    coeffs[2] = init_complex(3, 0);
+    coeffs[3] = init_complex(3, -2);
+
+    complex_polynomial_p expected_result = init_complex_polynomial(degree, coeffs);
+    complex_polynomial_p result = fast_fourier_transform(p);
+
+    assert(equal_complex_polynomial(result, expected_result));
+
+    destroy_complex(coeffs[0]);
+    destroy_complex(coeffs[1]);
+    destroy_complex(coeffs[2]);
+    destroy_complex(coeffs[3]);
+    free(coeffs);
+
+    destroy_complex_polynomial(result);
+    destroy_complex_polynomial(expected_result);
+    destroy_complex_polynomial(p);
 
     printf("PASSED");
 }

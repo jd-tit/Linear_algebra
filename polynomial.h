@@ -31,6 +31,12 @@ typedef complex_polynomial_t* complex_polynomial_p;
 
 complex_polynomial_t* init_complex_polynomial(int, complex_p*);
 
+complex_polynomial_p init_default_complex_polynomial(int);
+
+complex_polynomial_p copy_complex_polynomial(complex_polynomial_p);
+
+bool equal_complex_polynomial(complex_polynomial_p, complex_polynomial_p);
+
 int get_complex_degree(complex_polynomial_t*);
 
 complex_p get_complex_coefficient_at(complex_polynomial_t*, int);
