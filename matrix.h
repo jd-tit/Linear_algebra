@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <errno.h>
 
-typedef struct {
+typedef struct matrix_t {
     int rows;
     int cols;
     double** values;
 } matrix_t;
 
 typedef matrix_t* matrix_p;
+typedef double (*map_f)(double);
 
 matrix_t* init_matrix(unsigned, unsigned);
 
@@ -21,7 +22,6 @@ double get_determinant(matrix_t*);
 matrix_t* transpose_matrix(matrix_t*);
 matrix_t* adjunct_matrix(matrix_t*);
 matrix_t* invert_matrix(matrix_t*);
-
-
+matrix_t* map_function(matrix_t*, map_f);
 
 void destroy_matrix(matrix_t*);

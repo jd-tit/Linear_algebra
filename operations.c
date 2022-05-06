@@ -1,5 +1,5 @@
 #include "operations.h"
-#include "trigonometry.h"
+#include "mathematics.h"
 
 #include <math.h>
 

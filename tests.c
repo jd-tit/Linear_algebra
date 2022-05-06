@@ -1,24 +1,25 @@
-#include "utils.h"
 #include "tests.h"
-#include "scalar.h"
-#include "vector.h"
+#include "complex.h"
+#include "mathematics.h"
 #include "matrix.h"
 #include "operations.h"
 #include "polynomial.h"
-#include "trigonometry.h"
-#include "complex.h"
+#include "scalar.h"
+#include "utils.h"
+#include "vector.h"
 
-#define number_of_tests 9
+#define number_of_tests 10
 
 void run_scalar_tests();
 void run_vector_tests();
 void run_matrix_tests();
 void run_operations_tests();
 void run_polynomial_tests();
-void run_trigonometry_tests();
+void run_mathematics_tests();
 void run_complex_tests(); 
 void run_complex_polynomial_tests();
 void run_fast_fourier_transform_tests();
+void run_function_mapping_test();
 
 
 void run_all_tests() {
@@ -45,7 +46,7 @@ void run_all_tests() {
     printf(" [%d%c]\n", (int)(5.0 * 100 / number_of_tests), '%');
 
     printf("|  Running 'trigonometry tests'. Result: ");
-    run_trigonometry_tests();
+    run_mathematics_tests();
     printf(" [%d%c]\n", (int)(6.0 * 100 / number_of_tests), '%');
 
     printf("|  Running 'complex tests'. Result: ");
@@ -59,6 +60,10 @@ void run_all_tests() {
     printf("|  Running 'FFT tests'. Result: ");
     run_fast_fourier_transform_tests();
     printf(" [%d%c]\n", (int)(9.0 * 100 / number_of_tests), '%');
+
+    printf("|  Running 'Mapping test'.");
+    run_function_mapping_test();
+    printf(" [%d%c]\n", (int)(10.0 * 100 / number_of_tests), '%');
 
     printf("| All tests ran successfully!\n");
 }
@@ -534,7 +539,6 @@ void run_complex_polynomial_tests()
 
         z = init_complex(1, 0);
         complex_p result = calculate_complex_polynomial_value_at(p, z);
-        printf("%f %f", result->x, result->y);
         assert(eq_double(get_complex_re(result), 3));
         assert(eq_double(get_complex_im(result), 4));
 
@@ -551,9 +555,15 @@ void run_complex_polynomial_tests()
     printf("PASSED");
 }
 
-void run_trigonometry_tests() {
+void run_mathematics_tests() {
     assert(eq_double(sinus(M_PI_2, 10e-7), 1));
     assert(eq_double(cosinus(0, 0.001), 1));
+
+    double x = -5.0;
+    for(int i = 0; i < 20; ++i){
+      assert(eq_double(exp_f(x, DEFAULT_EPSILON / 100), exp(x)));
+      x += 0.5;
+    }
 
     printf("PASSED");
 }
@@ -593,4 +603,26 @@ void run_fast_fourier_transform_tests(){
     destroy_complex_polynomial(p);
 
     printf("PASSED");
+}
+
+double square(double x){
+  return x * x;
+}
+
+void run_function_mapping_test(){
+  matrix_p matrix = init_matrix(2, 2);
+
+  for(int i = 0; i < 2; ++i){
+    for(int j =0; j < 2; ++j) {
+      set_matrix_value_at(matrix, i, j, i*2 + j);
+    }
+  }
+  matrix_p result =  map_function(matrix, square);
+
+  for(int i = 0; i < 2; ++i){
+    for(int j =0; j < 2; ++j) {
+      double expected = get_matrix_value_at(matrix, i ,j);
+      assert(eq_double(get_matrix_value_at(result, i, j), expected * expected));
+    }
+  }
 }

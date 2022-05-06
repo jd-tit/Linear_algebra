@@ -118,3 +118,16 @@ void destroy_matrix(matrix_t* matrix){
     free(matrix->values);
     free(matrix);
 }
+
+matrix_t* map_function(matrix_t* matrix, map_f func){
+  matrix_t* result = init_matrix(matrix->rows, matrix->cols);
+
+  for(int i = 0; i < matrix->rows; ++i){
+    for(int j = 0; j < matrix->cols; ++j){
+      double val = get_matrix_value_at(matrix, i, j);
+      set_matrix_value_at(result, i, j, func(val));
+    }
+  }
+
+  return result;
+}

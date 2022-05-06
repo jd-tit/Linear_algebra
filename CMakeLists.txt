@@ -21,9 +21,11 @@ add_executable(LinearAlgebra
         scalar.h
         tests.c
         tests.h
-        trigonometry.c
-        trigonometry.h
+        mathematics.c
+        mathematics.h
         utils.c
         utils.h
         vector.c
         vector.h)
+
+target_link_libraries(LinearAlgebra m)
